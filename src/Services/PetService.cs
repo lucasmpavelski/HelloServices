@@ -33,8 +33,6 @@ using ServiceStack.ServiceInterface;
 
 namespace HelloServices
 {
-
-    
    
     /// <summary>
     /// Create your ServiceStack web service implementation.
@@ -49,12 +47,12 @@ namespace HelloServices
             }
             return (from n in PetDatabase.Instace.Pets 
                    where n.Id == pet.Id
-                   select n).SingleOrDefault();
+                   select n).SingleOrDefault ();
         }
     }
 
-    [Route("/dogs")]
-    [Route("/dogs/{Id}")]
+    [Route("/v1/dogs")]
+    [Route("/v1/dogs/{Id}")]
     public class Dog : Pet
     {
     }
@@ -74,6 +72,49 @@ namespace HelloServices
             return (from n in PetDatabase.Instace.Pets 
                 where n.Id == dog.Id
                 select  n).SingleOrDefault ();
+        }
+    }
+    
+    [Route("/v2/dogs")]
+    [Route("/v2/dogs/{Id}")]
+    public class Dog2 : Dog
+    {
+        public string Breed { get; set; }
+    }
+    
+    public class DogService2 : RestServiceBase<Dog2>
+    {
+        public override object OnGet (Dog2 dog)
+        {
+            if (dog.Id == Guid.Empty) {
+                return from n in PetDatabase.Instace.Pets 
+                    where n.GetType () == typeof(Dog2)
+                        select n;
+            }
+            return (from n in PetDatabase.Instace.Pets 
+                    where n.Id == dog.Id
+                    select  n).SingleOrDefault ();
+        }
+        
+        public override object OnPost (Dog2 request)
+        {
+            PetDatabase.Instace.Pets.Add(request);
+            return request;
+        }
+        
+        public override object OnDelete (Dog2 request)
+        {
+            PetDatabase.Instace.Pets.Remove(request);
+            return PetDatabase.Instace.Pets;
+        }
+        
+        public override object OnPut (Dog2 request)
+        {
+            Dog2 dog = (from n in PetDatabase.Instace.Pets 
+                        where request.Id == n.Id
+                        select  n).SingleOrDefault() as Dog2;
+            dog.Name = request.Name;
+            return dog;
         }
     }
 
@@ -175,6 +216,9 @@ namespace HelloServices
                         _instance._pets.Add (new Dog (){Name = "Spike", Id = Guid.NewGuid()});
                         _instance._pets.Add (new Dog (){Name = "Bo", Id = Guid.NewGuid()});
                         _instance._pets.Add (new Dog (){Name = "Mike", Id = Guid.NewGuid()});
+                        _instance._pets.Add (new Dog2 (){Name = "Jack", Breed = "Collie", Id = Guid.NewGuid()});
+                        _instance._pets.Add (new Dog2 (){Name = "John", Breed = "Poodle", Id = Guid.NewGuid()});
+                        _instance._pets.Add (new Dog2 (){Name = "Jim", Breed = "Pit Bull", Id = Guid.NewGuid()});
                         _instance._pets.Add (new Cat (){Name = "Kitty", Id = Guid.NewGuid()});
                         _instance._pets.Add (new Cat (){Name = "Mimi", Id = Guid.NewGuid()});
                         _instance._pets.Add (new Cat (){Name = "FurBall", Id = Guid.NewGuid()});
